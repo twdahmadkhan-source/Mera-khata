@@ -26,13 +26,9 @@ jobs:
           t = "BigBtn(red, Icons.logout, \"Logout\", \"Logout\", () async { if (!await confirm(context, \"Pakka Logout Karna Hai?\")) return; final p = await SharedPreferences.getInstance(); await p.setBool(\"guest\", false); guest.value = false; }),]),);}}\nclass RecyclePage extends StatelessWidget { const RecyclePage({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text(\"Recycle Bin\")), body: const Center(child: Text(\"Recycle Bin khali hai\"))); }\n"
           open(p, "w").write(s + t)
           '
-      - run: |
-          cat << 'EOF' >> android/gradle.properties
-          android.lint.checkReleaseBuilds=false
-          EOF
       - run: flutter pub get
       - run: flutter build apk --debug
-      - run: flutter build appbundle --release --no-tree-shake-icons
+      - run: cd android && ./gradlew bundleRelease -x lintVitalAnalyzeRelease
       - uses: actions/upload-artifact@v4
         with:
           name: playstore-files
