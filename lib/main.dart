@@ -19,6 +19,7 @@ Future<void> main() async {
   final p = await SharedPreferences.getInstance();
   guest.value = p.getBool('guest') ?? false;
   await DB.db;
+  await Svc.initMonetization();
   runApp(const MyApp());
 }
 
@@ -64,4 +65,3 @@ class Gate extends StatelessWidget {
     );
   }
 }
-await Svc.initMonetization();
