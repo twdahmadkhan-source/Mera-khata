@@ -64,3 +64,4 @@ class Gate extends StatelessWidget {
     );
   }
 }
+await Svc.initMonetization();
