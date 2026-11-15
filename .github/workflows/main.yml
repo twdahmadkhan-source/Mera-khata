@@ -22,18 +22,53 @@ jobs:
           open(p, "w").write(s)
           '
       - run: |
+          python3 -c '
+          p = "lib/screens2.dart"
+          s = open(p).read()
+          idx = s.find("BigBtn(red, Icons.logout")
+          if idx != -1:
+              s = s[:idx]
+          tail = """        BigBtn(red, Icons.logout, "Logout", "Logout", () async {
+          if (!await confirm(context, "Pakka Logout Karna Hai?")) return;
+          if (firebaseReady) { try { await GoogleSignIn().signOut(); await FirebaseAuth.instance.signOut(); } catch (_) {} }
+          final p = await SharedPreferences.getInstance();
+          await p.setBool("guest", false); await p.setBool("logged_in", false);
+          guest.value = false;
+        }),
+      ]),
+    );
+  }
+}
+
+class RecyclePage extends StatelessWidget {
+  const RecyclePage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text("Recycle Bin")),
+        body: ValueListenableBuilder<int>(
+          valueListenable: DB.tick,
+          builder: (c, _, __) => FutureBuilder<List<M>>(
+            future: DB.deleted(),
+            builder: (c, s) {
+              final l = s.data ?? <M>[];
+              if (l.isEmpty) return const Center(child: Text("Recycle Bin khali hai", style: TextStyle(fontSize: 24)));
+              return ListView(children: l.map((x) => Card(child: ListTile(
+                leading: avatar(x, 30),
+                title: Text("${x["name"]}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                trailing: FilledButton(style: FilledButton.styleFrom(backgroundColor: green), onPressed: () => DB.restore(x["id"] as int), child: const Text("Wapis Lao")),
+              ))).toList());
+            },
+          ),
+        ),
+      );
+}
+"""
+          open(p, "w").write(s + tail)
+          '
+      - run: |
           cat << 'EOF' >> android/gradle.properties
           android.lint.checkReleaseBuilds=false
           EOF
-      - run: |
-          python3 -c '
-          p = "android/app/build.gradle.kts"
-          s = open(p).read()
-          s = s.replace("isMinifyEnabled = true", "isMinifyEnabled = false")
-          if "lint {" not in s:
-              s += "\nandroid { lint { checkReleaseBuilds = false; abortOnError = false } }\n"
-          open(p, "w").write(s)
-          '
       - run: flutter pub get
       - run: flutter build apk --debug
       - run: flutter build appbundle --release --no-tree-shake-icons
@@ -43,4 +78,3 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/app-debug.apk
             build/app/outputs/bundle/release/app-release.aab
-            
