@@ -376,3 +376,4 @@ class SettingsPage extends StatelessWidget {
         BigBtn(Colors.orange.shade800, Icons.restore_from_trash, 'ری سائیکل بن', 'Recycle Bin (30 din)',
             () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecyclePage()))),
         BigBtn(red, Icons.logout, 'لاگ آؤٹ', 'Logout', () async {
+          
