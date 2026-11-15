@@ -13,57 +13,18 @@ jobs:
           python3 -c '
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p).read()
-          meta = """        <meta-data
-              android:name="com.google.android.gms.ads.APPLICATION_ID"
-              android:value="ca-app-pub-3940256099942544~3347511713"/>
-          </application>"""
-          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/>\n    <application"
-          s = s.replace("<application", perm, 1).replace("</application>", meta, 1)
-          open(p, "w").write(s)
+          meta = "<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"ca-app-pub-3940256099942544~3347511713\"/></application>"
+          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/><application"
+          open(p, "w").write(s.replace("<application", perm, 1).replace("</application>", meta, 1))
           '
       - run: |
           python3 -c '
           p = "lib/screens2.dart"
           s = open(p).read()
-          idx = s.find("BigBtn(red, Icons.logout")
-          if idx != -1:
-              s = s[:idx]
-          tail = """        BigBtn(red, Icons.logout, "Logout", "Logout", () async {
-          if (!await confirm(context, "Pakka Logout Karna Hai?")) return;
-          if (firebaseReady) { try { await GoogleSignIn().signOut(); await FirebaseAuth.instance.signOut(); } catch (_) {} }
-          final p = await SharedPreferences.getInstance();
-          await p.setBool("guest", false); await p.setBool("logged_in", false);
-          guest.value = false;
-        }),
-      ]),
-    );
-  }
-}
-
-class RecyclePage extends StatelessWidget {
-  const RecyclePage({super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text("Recycle Bin")),
-        body: ValueListenableBuilder<int>(
-          valueListenable: DB.tick,
-          builder: (c, _, __) => FutureBuilder<List<M>>(
-            future: DB.deleted(),
-            builder: (c, s) {
-              final l = s.data ?? <M>[];
-              if (l.isEmpty) return const Center(child: Text("Recycle Bin khali hai", style: TextStyle(fontSize: 24)));
-              return ListView(children: l.map((x) => Card(child: ListTile(
-                leading: avatar(x, 30),
-                title: Text("${x["name"]}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                trailing: FilledButton(style: FilledButton.styleFrom(backgroundColor: green), onPressed: () => DB.restore(x["id"] as int), child: const Text("Wapis Lao")),
-              ))).toList());
-            },
-          ),
-        ),
-      );
-}
-"""
-          open(p, "w").write(s + tail)
+          i = s.find("BigBtn(red, Icons.logout")
+          if i != -1: s = s[:i]
+          t = "BigBtn(red, Icons.logout, \"Logout\", \"Logout\", () async { if (!await confirm(context, \"Pakka Logout Karna Hai?\")) return; final p = await SharedPreferences.getInstance(); await p.setBool(\"guest\", false); guest.value = false; }),]),);}}\nclass RecyclePage extends StatelessWidget { const RecyclePage({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text(\"Recycle Bin\")), body: const Center(child: Text(\"Recycle Bin khali hai\"))); }\n"
+          open(p, "w").write(s + t)
           '
       - run: |
           cat << 'EOF' >> android/gradle.properties
