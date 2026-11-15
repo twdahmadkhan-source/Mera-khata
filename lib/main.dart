@@ -6,9 +6,16 @@ import 'db.dart';
 import 'screens.dart';
 import 'svc.dart';
 
+bool firebaseReady = false;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // needs android/app/google-services.json
+  try {
+    await Firebase.initializeApp();
+    firebaseReady = true;
+  } catch (e) {
+    firebaseReady = false;
+  }
   final p = await SharedPreferences.getInstance();
   guest.value = p.getBool('guest') ?? false;
   await DB.db;
@@ -23,28 +30,37 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: green),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           scaffoldBackgroundColor: Colors.white,
           appBarTheme: const AppBarTheme(
-              backgroundColor: green,
-              foregroundColor: Colors.white,
-              titleTextStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            titleTextStyle: TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
         ),
         home: const Gate(),
       );
 }
 
-/// Login stays forever: Firebase restores the session on every start,
-/// guest choice is saved in SharedPreferences. Only Logout clears it.
 class Gate extends StatelessWidget {
   const Gate({super.key});
   @override
-  Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (c, s) => ValueListenableBuilder<bool>(
-          valueListenable: guest,
-          builder: (c, g, _) => (s.data != null || g) ? const Shell() : const LoginPage(),
-        ),
+  Widget build(BuildContext context) {
+    if (!firebaseReady) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: guest,
+        builder: (c, g, _) => g ? const Shell() : const LoginPage(),
       );
+    }
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
+      builder: (c, s) => ValueListenableBuilder<bool>(
+        valueListenable: guest,
+        builder: (c, g, _) =>
+            (s.data != null || g) ? const Shell() : const LoginPage(),
+      ),
+    );
+  }
 }
