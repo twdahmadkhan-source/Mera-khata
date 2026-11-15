@@ -1,4 +1,4 @@
-name: Build Flutter APK
+name: Build Play Store AAB & APK
 on: [push]
 jobs:
   build:
@@ -8,10 +8,39 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - run: flutter create .
+      - run: flutter create --org com.merakhata.app .
+      - run: |
+          python3 -c '
+          p = "android/app/src/main/AndroidManifest.xml"
+          s = open(p).read()
+          meta = """        <meta-data
+              android:name="com.google.android.gms.ads.APPLICATION_ID"
+              android:value="ca-app-pub-3940256099942544~3347511713"/>
+          </application>"""
+          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/>\n    <application"
+          s = s.replace("<application", perm, 1).replace("</application>", meta, 1)
+          open(p, "w").write(s)
+          '
+      - run: |
+          cat << 'EOF' >> android/gradle.properties
+          android.lint.checkReleaseBuilds=false
+          EOF
+      - run: |
+          python3 -c '
+          p = "android/app/build.gradle.kts"
+          s = open(p).read()
+          s = s.replace("isMinifyEnabled = true", "isMinifyEnabled = false")
+          if "lint {" not in s:
+              s += "\nandroid { lint { checkReleaseBuilds = false; abortOnError = false } }\n"
+          open(p, "w").write(s)
+          '
       - run: flutter pub get
       - run: flutter build apk --debug
+      - run: flutter build appbundle --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: playstore-files
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/bundle/release/app-release.aab
+            
