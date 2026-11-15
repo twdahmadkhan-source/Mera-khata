@@ -21,6 +21,9 @@ jobs:
           python3 -c '
           p = "lib/screens2.dart"
           s = open(p).read()
+          s = s.replace("s.data! == null", "s.data![0] == null")
+          s = s.replace("final c = s.data! as M;", "final c = s.data![0] as M;")
+          s = s.replace("final es = s.data! as List<M>;", "final es = s.data![1] as List<M>;")
           i = s.find("BigBtn(red, Icons.logout")
           if i != -1: s = s[:i]
           t = "BigBtn(red, Icons.logout, \"Logout\", \"Logout\", () async { if (!await confirm(context, \"Pakka Logout Karna Hai?\")) return; final p = await SharedPreferences.getInstance(); await p.setBool(\"guest\", false); guest.value = false; }),]),);}}\nclass RecyclePage extends StatelessWidget { const RecyclePage({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text(\"Recycle Bin\")), body: const Center(child: Text(\"Recycle Bin khali hai\"))); }\n"
