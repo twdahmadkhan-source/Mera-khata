@@ -213,3 +213,54 @@ class HomePage extends StatelessWidget {
         ),
       );
 }
+        BigBtn(red, Icons.logout, 'لاگ آؤٹ', 'Logout', () async {
+          if (!await confirm(context, 'Pakka Logout Karna Hai?')) return;
+          if (firebaseReady) {
+            try {
+              await GoogleSignIn().signOut();
+              await FirebaseAuth.instance.signOut();
+            } catch (_) {}
+          }
+          final p = await SharedPreferences.getInstance();
+          await p.setBool('guest', false);
+          await p.setBool('logged_in', false);
+          guest.value = false;
+        }),
+      ]),
+    );
+  }
+}
+
+class RecyclePage extends StatelessWidget {
+  const RecyclePage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Recycle Bin')),
+        body: ValueListenableBuilder<int>(
+          valueListenable: DB.tick,
+          builder: (c, _, __) => FutureBuilder<List<M>>(
+            future: DB.deleted(),
+            builder: (c, s) {
+              final l = s.data ?? <M>[];
+              if (l.isEmpty) return const Center(child: Text('Recycle Bin khali hai', style: TextStyle(fontSize: 24)));
+              return ListView(
+                  children: l.map((x) {
+                final left = 30 - DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(x['deleted_at'] as int)).inDays;
+                return Card(
+                    child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+                  leading: avatar(x, 30),
+                  title: Text('${x['name']}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  subtitle: Text('$left din baaki', style: const TextStyle(fontSize: 16)),
+                  trailing: FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: green),
+                      icon: const Icon(Icons.restore),
+                      label: const Text('Wapis Lao', style: TextStyle(fontSize: 18)),
+                      onPressed: () => DB.restore(x['id'] as int)),
+                ));
+              }).toList());
+            },
+          ),
+        ),
+      );
+}
