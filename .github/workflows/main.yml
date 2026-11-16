@@ -14,8 +14,14 @@ jobs:
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p).read()
           meta = "<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"ca-app-pub-3940256099942544~3347511713\"/></application>"
-          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/><application"
+          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/><queries><intent><action android:name=\"android.intent.action.VIEW\"/><data android:scheme=\"https\"/></intent><intent><action android:name=\"android.intent.action.DIAL\"/></intent></queries><application"
           open(p, "w").write(s.replace("<application", perm, 1).replace("</application>", meta, 1))
+          '
+      - run: |
+          python3 -c '
+          p = "lib/main.dart"
+          s = open(p).read()
+          open(p, "w").write(s.replace("await Svc.initMonetization();", "Svc.initMonetization();"))
           '
       - run: |
           python3 -c '
@@ -30,11 +36,11 @@ jobs:
           open(p, "w").write(s + t)
           '
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - run: flutter build apk --release --no-tree-shake-icons
       - run: cd android && ./gradlew bundleRelease -x lintVitalAnalyzeRelease
       - uses: actions/upload-artifact@v4
         with:
           name: playstore-files
           path: |
-            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
