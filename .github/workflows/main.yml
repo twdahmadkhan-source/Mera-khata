@@ -23,8 +23,16 @@ jobs:
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p).read()
           meta = "<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"ca-app-pub-3940256099942544~3347511713\"/></application>"
-          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/><queries><intent><action android:name=\"android.intent.action.VIEW\"/><data android:scheme=\"https\"/></intent><intent><action android:name=\"android.intent.action.DIAL\"/></intent></queries><application"
+          perm = "<uses-permission android:name=\"com.android.vending.BILLING\"/><queries><intent><action android:name=\"android.intent.action.VIEW\"/><data android:scheme=\"whatsapp\"/></intent><intent><action android:name=\"android.intent.action.VIEW\"/><data android:scheme=\"https\"/></intent><intent><action android:name=\"android.intent.action.DIAL\"/></intent></queries><application"
           open(p, "w").write(s.replace("<application", perm, 1).replace("</application>", meta, 1))
+          '
+      - run: |
+          python3 -c '
+          p = "lib/svc.dart"
+          s = open(p).read()
+          old = "https://wa.me{_num(phone)}?text="
+          new = "whatsapp://send?phone=${_num(phone)}&text="
+          open(p, "w").write(s.replace(old, new))
           '
       - run: |
           python3 -c '
