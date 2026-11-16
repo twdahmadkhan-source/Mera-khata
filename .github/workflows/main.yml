@@ -11,6 +11,15 @@ jobs:
       - run: flutter create --org com.merakhata.app .
       - run: |
           python3 -c '
+          p = "android/app/build.gradle.kts"
+          s = open(p).read()
+          s = s.replace("isMinifyEnabled = true", "isMinifyEnabled = false").replace("isShrinkResources = true", "isShrinkResources = false")
+          if "isMinifyEnabled" not in s:
+              s = s.replace("release {", "release {\n            isMinifyEnabled = false\n            isShrinkResources = false", 1)
+          open(p, "w").write(s)
+          '
+      - run: |
+          python3 -c '
           p = "android/app/src/main/AndroidManifest.xml"
           s = open(p).read()
           meta = "<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"ca-app-pub-3940256099942544~3347511713\"/></application>"
