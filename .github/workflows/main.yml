@@ -10,6 +10,7 @@ jobs:
           channel: 'stable'
       - run: flutter create --org com.merakhata.app .
       - run: |
+          pip install pillow
           python3 -c '
           from PIL import Image, ImageDraw
           import glob
@@ -84,7 +85,7 @@ jobs:
           s = s.replace("final es = s.data! as List<M>;", "final es = s.data!.last as List<M>;")
           i = s.find("BigBtn(red, Icons.logout")
           if i != -1: s = s[:i]
-          t = "BigBtn(red, Icons.logout, \"Logout\", \"Logout\", () async { if (!await confirm(context, \"Pakka Logout Karna Hai?\")) return; final p = await SharedPreferences.getInstance(); await p.setBool(\"guest\", false); guest.value = false; }),]),);}}\nclass RecyclePage extends StatelessWidget { const RecyclePage({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text(\"Recycle Bin\")), body: const Center(child: Text(\"Recycle Bin khali hai\"))); }\n"
+          t = "BigBtn(red, Icons.logout, \"Logout\", \"Logout\", () async { if (!await confirm(context, \"Pakka Logout Karna Hai?\")) return; final p = await SharedPreferences.getInstance(); await p.setBool(\"guest\", false); guest.value = false; }),]),);}}\nclass RecyclePage extends StatelessWidget { const RecyclePage({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text(\"Recycle Bin\")), body: ValueListenableBuilder<int>(valueListenable: DB.tick, builder: (c, _, __) => FutureBuilder<List<M>>(future: DB.deleted(), builder: (c, s) { final l = s.data ?? <M>[]; if (l.isEmpty) return const Center(child: Text(\"Recycle Bin khali hai\", style: TextStyle(fontSize: 24))); return ListView(children: l.map((x) => Card(child: ListTile(leading: avatar(x, 30), title: Text(\"${x[\x27name\x27]}\", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), trailing: FilledButton(style: FilledButton.styleFrom(backgroundColor: green), onPressed: () => DB.restore(x[\x27id\x27] as int), child: const Text(\"Wapis Lao\"))))).toList()); }))); }\n"
           open(p, "w").write(s + t)
           '
       - run: flutter pub get
