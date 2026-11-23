@@ -11,11 +11,48 @@ jobs:
       - run: flutter create --org com.merakhata.app .
       - run: |
           python3 -c '
+          from PIL import Image, ImageDraw
+          import glob
+          img = Image.new("RGBA", (512, 512), (27, 94, 32, 255))
+          d = ImageDraw.Draw(img)
+          d.rounded_rectangle(tuple((110, 70, 410, 442)), radius=36, fill=(255, 255, 255, 255))
+          d.rectangle(tuple((110, 70, 155, 442)), fill=(255, 193, 7, 255))
+          d.line(tuple((195, 175, 365, 175)), fill=(46, 125, 50, 255), width=22)
+          d.line(tuple((195, 255, 365, 255)), fill=(46, 125, 50, 255), width=22)
+          d.line(tuple((195, 335, 315, 335)), fill=(211, 47, 47, 255), width=22)
+          for p in glob.glob("android/app/src/main/res/mipmap-*/ic_launcher.png"):
+              s = Image.open(p).size
+              img.resize(s, Image.LANCZOS).save(p)
+          '
+      - run: |
+          keytool -genkey -v -keystore android/app/merakhata-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias merakhata -storepass merakhata123 -keypass merakhata123 -dname "CN=Mera Khata, OU=Mobile, O=Mera Khata, L=Malakand, S=KPK, C=PK"
+          cat << 'EOF' > android/key.properties
+          storePassword=merakhata123
+          keyPassword=merakhata123
+          keyAlias=merakhata
+          storeFile=merakhata-keystore.jks
+          EOF
+      - run: |
+          python3 -c '
           p = "android/app/build.gradle.kts"
           s = open(p).read()
-          s = s.replace("isMinifyEnabled = true", "isMinifyEnabled = false").replace("isShrinkResources = true", "isShrinkResources = false")
-          if "isMinifyEnabled" not in s:
-              s = s.replace("release {", "release {\n            isMinifyEnabled = false\n            isShrinkResources = false", 1)
+          sign = """
+          signingConfigs {
+              create("release") {
+                  storeFile = file("merakhata-keystore.jks")
+                  storePassword = "merakhata123"
+                  keyAlias = "merakhata"
+                  keyPassword = "merakhata123"
+              }
+          }
+          buildTypes {
+              release {
+                  signingConfig = signingConfigs.getByName("release")
+                  isMinifyEnabled = false
+                  isShrinkResources = false
+          """
+          s = s.replace("buildTypes {\n        release {", sign, 1).replace("buildTypes {\r\n        release {", sign, 1)
+          s = s.replace("signingConfig = signingConfigs.getByName(\"debug\")", "")
           open(p, "w").write(s)
           '
       - run: |
@@ -30,9 +67,7 @@ jobs:
           python3 -c '
           p = "lib/svc.dart"
           s = open(p).read()
-          old = "https://wa.me{_num(phone)}?text="
-          new = "whatsapp://send?phone=${_num(phone)}&text="
-          open(p, "w").write(s.replace(old, new))
+          open(p, "w").write(s.replace("https://wa.me{_num(phone)}?text=", "whatsapp://send?phone=${_num(phone)}&text="))
           '
       - run: |
           python3 -c '
@@ -60,3 +95,4 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
+            android/app/merakhata-keystore.jks
